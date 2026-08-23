@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>仁武・八德 防汛影像牆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep:#0B1620;
+    --panel:#142430;
+    --line:#24404F;
+    --ink:#DCE8EE;
+    --muted:#7E97A5;
+    --signal:#56C8D8;
+    --alert:#E8913A;
+    --ok:#5FBF8E;
+    --display:"Barlow Condensed","Noto Sans TC",sans-serif;
+    --body:"Noto Sans TC",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--deep);
+    color:var(--ink);
+    font-family:var(--body);
+    min-height:100vh;
+    background-image:linear-gradient(180deg,#0E1E2B 0%,var(--deep) 420px);
+    padding-top:12px;
+  }
+
+  /* ---------- 頁首 ---------- */
+  .bar{
+    display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;
+    padding:22px 24px 14px;border-bottom:1px solid var(--line);
+    position:fixed;top:0;left:0;right:0;z-index:30;
+    background:#0E1E2B;transition:transform .26s ease;
+  }
+  .bar.collapsed{transform:translateY(calc(-100% + 6px))}
+  .bar::after{
+    content:"";position:absolute;left:50%;bottom:2px;width:46px;height:2px;
+    transform:translateX(-50%);background:var(--line);opacity:0;transition:opacity .2s;
+  }
+  .bar.collapsed::after{opacity:1}
+  .hotzone{position:fixed;top:0;left:0;right:0;height:26px;z-index:29}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{
+    width:42px;height:42px;flex:none;display:grid;place-items:center;
+    border:1px solid var(--signal);color:var(--signal);
+    font-family:var(--display);font-size:24px;font-weight:700;line-height:1;
+  }
+  .brand h1{
+    font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:.06em;
+    margin:0;line-height:1.05;
+  }
+  .brand p{margin:3px 0 0;font-size:12px;color:var(--muted);letter-spacing:.12em}
+
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .clock{
+    font-family:var(--mono);font-size:22px;letter-spacing:.04em;color:var(--signal);
+    padding-right:12px;border-right:1px solid var(--line);margin-right:2px;
+  }
+  .ctl{
+    appearance:none;background:transparent;color:var(--ink);
+    border:1px solid var(--line);border-radius:0;
+    font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:.08em;
+    padding:8px 14px;cursor:pointer;transition:border-color .15s,color .15s;
+  }
+  .ctl:hover{border-color:var(--signal);color:var(--signal)}
+  .ctl:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+  select.ctl{padding-right:10px}
+  select.ctl option{background:var(--panel);color:var(--ink)}
+  .ctl[data-paused="true"]{border-color:var(--alert);color:var(--alert)}
+
+  .progress{position:absolute;left:0;bottom:-1px;height:2px;background:var(--signal);width:0;opacity:.7}
+
+  /* ---------- 影像牆 ---------- */
+  .grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;padding:20px 24px 8px;
+  }
+  .panel{display:flex;background:var(--panel);border:1px solid var(--line)}
+
+  /* 簽名元素：左側水位標尺 */
+  .rule{
+    width:34px;flex:none;position:relative;border-right:1px solid var(--line);
+    background:
+      repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 14px);
+    background-position:right 0 top 0;background-size:9px 100%;background-repeat:repeat-y;
+  }
+  .rule::before{
+    content:"";position:absolute;right:0;top:0;bottom:0;width:16px;
+    background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 70px);
+  }
+  .idx{
+    position:absolute;left:50%;top:14px;transform:translateX(-50%);
+    font-family:var(--display);font-size:17px;font-weight:700;color:var(--signal);
+  }
+  .rule .unit{
+    position:absolute;left:50%;bottom:12px;transform:translateX(-50%) rotate(180deg);
+    writing-mode:vertical-rl;font-family:var(--display);font-size:11px;
+    letter-spacing:.22em;color:var(--muted);
+  }
+
+  .body{flex:1;min-width:0;display:flex;flex-direction:column}
+  .phead{display:flex;align-items:baseline;gap:10px;padding:11px 14px 9px;border-bottom:1px solid var(--line)}
+  .phead h2{margin:0;font-size:16px;font-weight:700;letter-spacing:.02em;line-height:1.2}
+  .phead .alt{font-size:12px;color:var(--muted)}
+  .tag{
+    margin-left:auto;flex:none;font-family:var(--display);font-size:12px;font-weight:600;
+    letter-spacing:.12em;color:var(--muted);border:1px solid var(--line);padding:2px 7px;
+  }
+
+  .frame{
+    position:relative;aspect-ratio:16/9;background:#08111A;overflow:hidden;cursor:zoom-in;
+  }
+  .frame img{width:100%;height:100%;object-fit:contain;display:block}
+  .frame img[hidden]{display:none}
+  .frame::after{
+    content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--signal),transparent);opacity:0;
+  }
+  .frame.loading::after{animation:sweep 1s linear infinite}
+  @keyframes sweep{
+    0%{opacity:.9;transform:translateY(0)}
+    100%{opacity:.9;transform:translateY(calc(100% * 100))}
+  }
+  .state{
+    position:absolute;inset:0;display:none;place-content:center;text-align:center;
+    padding:18px;gap:6px;font-size:13px;color:var(--muted);
+  }
+  .frame.failed .state{display:grid}
+  .state strong{display:block;font-size:15px;color:var(--alert);margin-bottom:6px}
+
+  .pfoot{
+    display:flex;align-items:center;gap:9px;padding:9px 14px;
+    border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted);
+  }
+  .dot{width:7px;height:7px;flex:none;background:var(--muted);border-radius:50%}
+  .panel.live .dot{background:var(--ok)}
+  .panel.failed .dot{background:var(--alert)}
+  .pfoot .exp{margin-left:auto;text-align:right}
+  .pfoot .exp.soon{color:var(--alert)}
+
+  /* ---------- 放大檢視 ---------- */
+  .viewer{
+    position:fixed;inset:0;background:rgba(6,14,20,.94);display:none;
+    flex-direction:column;z-index:40;padding:18px;
+  }
+  .viewer.open{display:flex}
+  .viewer-top{display:flex;align-items:center;gap:14px;padding-bottom:12px}
+  .viewer-top h3{margin:0;font-size:18px;font-weight:700}
+  .viewer img{flex:1;min-height:0;width:100%;object-fit:contain}
+  .viewer .ctl{margin-left:auto}
+
+  .note{padding:6px 24px 28px;font-size:12px;line-height:1.9;color:var(--muted);max-width:760px}
+  .note code{font-family:var(--mono);color:var(--signal);font-size:11px}
+
+  @media (max-width:820px){
+    .grid{grid-template-columns:minmax(0,1fr);padding:16px}
+    .bar{padding:18px 16px 12px}
+    .brand h1{font-size:24px}
+    .clock{font-size:18px}
+    .note{padding:6px 16px 24px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .frame.loading::after{animation:none;opacity:.5}
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">水</div>
+    <div>
+      <h1>仁武・八德 防汛影像牆</h1>
+      <p>高雄市水利局 淹水資訊 · 四站同步監看</p>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="clock" id="clock">--:--:--</div>
+    <label class="ctl" for="interval" style="display:flex;align-items:center;gap:8px;padding:0 0 0 12px">
+      更新
+      <select class="ctl" id="interval" style="border:0;padding:8px 8px 8px 4px">
+        <option value="15">15 秒</option>
+        <option value="30" selected>30 秒</option>
+        <option value="60">60 秒</option>
+        <option value="300">5 分鐘</option>
+      </select>
+    </label>
+    <button class="ctl" id="pause" data-paused="false">暫停更新</button>
+    <button class="ctl" id="reload">立即重載</button>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+<div class="hotzone" id="hotzone" title="滑鼠移到頂端顯示控制列"></div>
+
+<main class="grid" id="grid"></main>
+
+<p class="note">
+  影像由高雄市政府淹水資訊平台提供，本頁只負責排版與定時重載，不儲存任何畫面。<br>
+  兩支 CCTV 網址帶有 <code>jwt</code> 憑證，到期後畫面會停止更新 —— 屆時請回原平台重新複製網址，貼進本檔案最上方的 <code>STATIONS</code> 陣列即可。
+</p>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="放大檢視">
+  <div class="viewer-top">
+    <h3 id="viewer-name">—</h3>
+    <button class="ctl" id="viewer-close">關閉</button>
+  </div>
+  <img id="viewer-img" alt="">
+</div>
+
+<script>
+/* ====== 站點設定：憑證過期時換掉這裡的 url 即可 ====== */
+const STATIONS = [
+  {
+    name: "八德東路橋",
+    alt: "八涳橋",
+    type: "CCTV",
+    url: "https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/1511?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc0NTcwMTUsIm5iZiI6MTc4NzQ1NzAxNSwianRpIjoiZWVkNjFjMjEtN2I4ZC00N2IwLWI2Y2YtYmYyZmQxMWQ0NDQ2IiwiZXhwIjoxNzg3NjI5ODE1LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.aKLiAydqfHN_v0P55VgQtv7oiy-B-kPns4mO2xLY8MM&guid=38b234f9-6d7b-4fe0-8134-bcc2489a7ac1"
+  },
+  {
+    name: "八德東路388巷 × 民湖街",
+    alt: "路口",
+    type: "感測影像",
+    url: "https://floodinfo.kcg.gov.tw/public/SensorImage/3972500FL0006.jpg?guid=31ef2b11-c495-4ce9-ad62-269840561a7d"
+  },
+  {
+    name: "北屋北街 × 京文路",
+    alt: "路口",
+    type: "CCTV",
+    url: "https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/1512?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc0NTg4MTIsIm5iZiI6MTc4NzQ1ODgxMiwianRpIjoiZGUyNDRlNDUtODkwZS00OWNmLTgyYTctOTk2N2M2MmEzMjQ3IiwiZXhwIjoxNzg3NjMxNjEyLCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.a4QL85FlEqs7f5YFcuOXwdjpVEcbQCKunwpEAD7lFCQ&guid=7c2c534a-6ae1-44d0-ab8e-c4f9fa004b5e"
+  },
+  {
+    name: "仁光路 × 仁雄路",
+    alt: "NET 路口",
+    type: "感測影像",
+    url: "https://floodinfo.kcg.gov.tw/public/SensorImage/3972500FL0008.jpg?guid=64bfdc17-dbf7-4fb1-a0cc-1d185cece941"
+  }
+];
+
+const grid = document.getElementById("grid");
+const progress = document.getElementById("progress");
+const pauseBtn = document.getElementById("pause");
+const intervalSel = document.getElementById("interval");
+const viewer = document.getElementById("viewer");
+const viewerImg = document.getElementById("viewer-img");
+const viewerName = document.getElementById("viewer-name");
+
+const pad = n => String(n).padStart(2, "0");
+const hhmmss = d => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+
+function jwtExpiry(url) {
+  const m = url.match(/[?&]jwt=([^&]+)/);
+  if (!m) return null;
+  try {
+    const payload = JSON.parse(atob(m[1].split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload.exp ? new Date(payload.exp * 1000) : null;
+  } catch (e) { return null; }
+}
+
+const cards = STATIONS.map((s, i) => {
+  const el = document.createElement("article");
+  el.className = "panel";
+  el.innerHTML = `
+    <div class="rule" aria-hidden="true">
+      <span class="idx">${pad(i + 1)}</span>
+      <span class="unit">STATION</span>
+    </div>
+    <div class="body">
+      <div class="phead">
+        <h2>${s.name}</h2>
+        <span class="alt">${s.alt}</span>
+        <span class="tag">${s.type}</span>
+      </div>
+      <div class="frame loading" tabindex="0" role="button" aria-label="放大 ${s.name}">
+        <img alt="${s.name} 即時影像" hidden>
+        <div class="state">
+          <strong>畫面載入失敗</strong>
+          憑證可能已到期，或平台暫時無回應。<br>請回原平台重新複製網址。
+        </div>
+      </div>
+      <div class="pfoot">
+        <span class="dot"></span>
+        <span class="time">等待首張畫面</span>
+        <span class="exp"></span>
+      </div>
+    </div>`;
+  grid.appendChild(el);
+
+  const frame = el.querySelector(".frame");
+  const img = el.querySelector("img");
+  const time = el.querySelector(".time");
+  const exp = el.querySelector(".exp");
+
+  const expiry = jwtExpiry(s.url);
+  if (expiry) {
+    const soon = expiry.getTime() - Date.now() < 6 * 3600 * 1000;
+    exp.textContent = "憑證 " + pad(expiry.getMonth() + 1) + "/" + pad(expiry.getDate()) + " " + hhmmss(expiry).slice(0, 5);
+    if (soon) exp.classList.add("soon");
+  } else {
+    exp.textContent = "免憑證";
+  }
+
+  const card = {
+    load() {
+      frame.classList.add("loading");
+      const probe = new Image();
+      probe.onload = () => {
+        img.src = probe.src;
+        img.hidden = false;
+        frame.classList.remove("loading", "failed");
+        el.classList.remove("failed");
+        el.classList.add("live");
+        time.textContent = "更新於 " + hhmmss(new Date());
+      };
+      probe.onerror = () => {
+        frame.classList.remove("loading");
+        frame.classList.add("failed");
+        el.classList.remove("live");
+        el.classList.add("failed");
+        time.textContent = "失敗於 " + hhmmss(new Date());
+      };
+      probe.src = s.url + (s.url.includes("?") ? "&" : "?") + "_=" + Date.now();
+    }
+  };
+
+  const open = () => {
+    if (!img.src || img.hidden) return;
+    viewerImg.src = img.src;
+    viewerName.textContent = s.name;
+    viewer.classList.add("open");
+  };
+  frame.addEventListener("click", open);
+  frame.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+
+  return card;
+});
+
+/* ---- 排程 ---- */
+let paused = false;
+let elapsed = 0;
+
+function refreshAll() { elapsed = 0; cards.forEach(c => c.load()); }
+
+setInterval(() => {
+  document.getElementById("clock").textContent = hhmmss(new Date());
+  if (paused) { progress.style.width = "0%"; return; }
+  const period = Number(intervalSel.value);
+  elapsed++;
+  progress.style.width = Math.min(100, (elapsed / period) * 100) + "%";
+  if (elapsed >= period) refreshAll();
+}, 1000);
+
+pauseBtn.addEventListener("click", () => {
+  paused = !paused;
+  pauseBtn.dataset.paused = String(paused);
+  pauseBtn.textContent = paused ? "恢復更新" : "暫停更新";
+});
+document.getElementById("reload").addEventListener("click", refreshAll);
+intervalSel.addEventListener("change", () => { elapsed = 0; });
+
+document.getElementById("viewer-close").addEventListener("click", () => viewer.classList.remove("open"));
+viewer.addEventListener("click", e => { if (e.target === viewer || e.target === viewerImg) viewer.classList.remove("open"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") viewer.classList.remove("open"); });
+
+refreshAll();
+
+/* ---- 頁首自動收合：滑鼠碰頂端才出現 ---- */
+const bar = document.querySelector(".bar");
+const hotzone = document.getElementById("hotzone");
+let hideTimer;
+
+function showBar() { clearTimeout(hideTimer); bar.classList.remove("collapsed"); }
+function hideBar(delay) {
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => {
+    if (bar.contains(document.activeElement)) { hideBar(1500); return; }
+    bar.classList.add("collapsed");
+  }, delay);
+}
+
+hotzone.addEventListener("mouseenter", showBar);
+bar.addEventListener("mouseenter", showBar);
+bar.addEventListener("focusin", showBar);
+bar.addEventListener("change", showBar);
+bar.addEventListener("mouseleave", () => hideBar(500));
+hotzone.addEventListener("mouseleave", () => hideBar(500));
+bar.addEventListener("focusout", () => hideBar(1200));
+/* 觸控裝置：點頂端細線切換 */
+hotzone.addEventListener("click", () => {
+  bar.classList.contains("collapsed") ? showBar() : bar.classList.add("collapsed");
+});
+
+hideBar(2500);
+</script>
+</body>
+</html>
