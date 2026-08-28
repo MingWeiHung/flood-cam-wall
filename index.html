@@ -125,8 +125,18 @@
     writing-mode:vertical-rl;font-family:var(--display);font-size:11px;letter-spacing:.22em;color:var(--muted);
   }
   .pbody{flex:1;min-width:0;display:flex;flex-direction:column}
-  .phead{display:flex;align-items:baseline;gap:10px;padding:11px 14px 9px;border-bottom:1px solid var(--line)}
+  .phead{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid var(--line)}
   .phead h2{margin:0;font-size:16px;font-weight:700;letter-spacing:.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .grip{flex:none;color:var(--muted);font-size:14px;line-height:1;cursor:grab;letter-spacing:-2px}
+  .panel:active .grip{cursor:grabbing}
+  .move{flex:none;display:flex;gap:2px;margin-left:2px}
+  .move button{
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    width:22px;height:22px;line-height:1;font-size:15px;cursor:pointer;padding:0;
+  }
+  .move button:hover{border-color:var(--signal);color:var(--signal)}
+  .panel.dragging{opacity:.35}
+  .panel.over{outline:2px dashed var(--signal);outline-offset:-2px}
   .tag{margin-left:auto;flex:none;font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.12em;color:var(--muted);border:1px solid var(--line);padding:2px 7px}
   .frame{position:relative;aspect-ratio:16/9;background:#08111A;overflow:hidden;cursor:zoom-in}
   .frame img{width:100%;height:100%;object-fit:contain;display:block}
@@ -220,8 +230,8 @@
 <div class="empty" id="empty" hidden>尚未選擇站點<br>點右上角「選擇站點」勾選要監看的路口</div>
 
 <p class="note">
-  影像由高雄市政府淹水資訊平台提供，本頁只負責排版與定時重載，不儲存任何畫面。<br>
-  標示 <code>CCTV</code> 的網址帶有 <code>jwt</code> 憑證，約兩天到期，到期後該格會停止更新；標示 <code>感測</code> 與 <code>水利署</code> 的免憑證，長期有效。<br>
+  影像由高雄市政府淹水資訊平台與 <a href="https://www.twipcam.com/" target="_blank" rel="noopener" style="color:var(--signal)">twipcam</a>（CC BY 3.0 TW）提供，本頁只負責排版與定時重載，不儲存任何畫面。<br>
+  標示 <code>CCTV</code> 的網址帶有 <code>jwt</code> 憑證，約兩天到期，需回原平台重新複製網址；標示 <code>道路</code> <code>感測</code> <code>水利署</code> 的免憑證，長期有效，預設只勾選這些。<br>
   你的勾選與自行新增的站點會存在這台裝置的瀏覽器裡，換裝置要重新設定。
 </p>
 
@@ -243,7 +253,19 @@ const BUILTIN = [
   { name:"澄觀路與仁怡街口", url:"https://floodinfo.kcg.gov.tw/public/SensorImage/TSIOT029.jpg?guid=8dc281e3-eda5-46e2-80f8-0f2bf969ac3d" },
   { name:"仁雄橋", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/360?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc0OTYwMzgsIm5iZiI6MTc4NzQ5NjAzOCwianRpIjoiNjYxYTZmNDMtOWEzZC00N2RmLWFkNTYtYjIxY2VlMGRkYWM1IiwiZXhwIjoxNzg3NjY4ODM4LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.KyR4CnjPUmk9qhkgE2F_hh-xWfChZs1ZfAaRUpLi8Cg&guid=1f95f6cb-41da-43ba-8f92-d0b4e88ae6f6" },
   { name:"鳳仁路與澄觀路口", url:"https://floodinfo.kcg.gov.tw/public/SensorImage/3972500FL0007.jpg?guid=567bb3da-5052-477a-9b9d-7eb988321247" },
-  { name:"八德東路23巷路口", url:"https://iapi.wra.gov.tw/v3/api/Image/4777c38d-a1c2-43a7-bc51-601d89fad4d5?guid=00639204-8d71-4b31-81ad-409151da3692" }
+  { name:"八德東路23巷路口", url:"https://iapi.wra.gov.tw/v3/api/Image/4777c38d-a1c2-43a7-bc51-601d89fad4d5?guid=00639204-8d71-4b31-81ad-409151da3692" },
+
+  /* --- 以下為免憑證版本（twipcam 轉送，不會過期） --- */
+  { name:"仁雄橋（免憑證）", url:"https://c01.twipcam.com/cam/snapshot/wra-002896.jpg" },
+  { name:"鳳仁路與澄觀路口（免憑證）", url:"https://c01.twipcam.com/cam/snapshot/khh-000272.jpg" },
+  { name:"澄觀路、水管路三段東側", url:"https://c01.twipcam.com/cam/snapshot/khh-700013.jpg" },
+  { name:"澄觀路、水管路三段西側", url:"https://c01.twipcam.com/cam/snapshot/khh-700014.jpg" },
+  { name:"八德南路、停車場出入口", url:"https://c01.twipcam.com/cam/snapshot/khh-000454.jpg" },
+  { name:"文前路、仁勇路（澄清巷）", url:"https://c01.twipcam.com/cam/snapshot/khh-000455.jpg" },
+  { name:"仁雄路、鼎力路（路橋北側）", url:"https://c01.twipcam.com/cam/snapshot/khh-000209.jpg" },
+  { name:"高速公路（興西路）、鳳仁路東北角", url:"https://c01.twipcam.com/cam/snapshot/khh-000207.jpg" },
+  { name:"鳳仁路與水管路交岔路口", url:"https://c01.twipcam.com/cam/snapshot/khh-000273.jpg" },
+  { name:"水管三路、義大二路東南角", url:"https://c01.twipcam.com/cam/snapshot/khh-000201.jpg" }
 ];
 
 /* ====== 小工具 ====== */
@@ -253,6 +275,7 @@ const $ = id => document.getElementById(id);
 
 function kindOf(url){
   if (/cctv\/wrs\/image/.test(url)) return "CCTV";
+  if (/twipcam/.test(url)) return "道路";
   if (/wra\.gov\.tw/.test(url)) return "水利署";
   if (/SensorImage/.test(url)) return "感測";
   return "影像";
@@ -278,10 +301,10 @@ const store = {
   set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
 let custom = store.get("flood.custom", []);
-let selected = store.get("flood.selected", null);
+let selected = store.get("flood.selected.v2b", null);
 
 function catalog(){ return BUILTIN.concat(custom); }
-if (!Array.isArray(selected)) selected = catalog().map(s => keyOf(s.url));
+if (!Array.isArray(selected)) selected = catalog().filter(s => kindOf(s.url) !== "CCTV").map(s => keyOf(s.url));
 function isOn(s){ return selected.includes(keyOf(s.url)); }
 
 /* ====== 站點選單 ====== */
@@ -365,24 +388,41 @@ let cards = [];
 function renderGrid(){
   grid.innerHTML = "";
   cards = [];
-  const list = catalog().filter(isOn);
+  const list = selected.map(k => catalog().find(s => keyOf(s.url) === k)).filter(Boolean);
   $("empty").hidden = list.length > 0;
 
   list.forEach((s, i) => {
     const kind = kindOf(s.url);
     const el = document.createElement("article");
     el.className = "panel";
+    el.draggable = true;
+    el.dataset.k = keyOf(s.url);
     el.innerHTML = `
       <div class="rule" aria-hidden="true"><span class="idx">${pad(i+1)}</span><span class="unit">STATION</span></div>
       <div class="pbody">
-        <div class="phead"><h2>${s.name}</h2><span class="tag">${kind}</span></div>
+        <div class="phead">
+          <span class="grip" title="拖曳調整位置">⠿</span>
+          <h2>${s.name}</h2>
+          <span class="tag">${kind}</span>
+          <span class="move">
+            <button type="button" data-mv="-1" title="往前移" aria-label="往前移">‹</button>
+            <button type="button" data-mv="1" title="往後移" aria-label="往後移">›</button>
+          </span>
+        </div>
         <div class="frame loading" tabindex="0" role="button" aria-label="放大 ${s.name}">
-          <img alt="${s.name} 即時影像" hidden>
+          <img alt="${s.name} 即時影像" draggable="false" hidden>
           <div class="state"><strong>畫面載入失敗</strong>憑證可能已到期，或平台暫時無回應。</div>
         </div>
         <div class="pfoot"><span class="dot"></span><span class="time">等待首張畫面</span><span class="exp"></span></div>
       </div>`;
     grid.appendChild(el);
+
+    el.querySelectorAll(".move button").forEach(b => {
+      b.addEventListener("click", ev => {
+        ev.stopPropagation();
+        moveBy(keyOf(s.url), Number(b.dataset.mv));
+      });
+    });
 
     const frame = el.querySelector(".frame");
     const img = el.querySelector("img");
@@ -425,8 +465,66 @@ function renderGrid(){
   });
 }
 
+/* ====== 排序（拖曳／按鈕，順序存在本機） ====== */
+function moveBy(key, delta){
+  const i = selected.indexOf(key);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= selected.length) return;
+  selected.splice(j, 0, selected.splice(i, 1)[0]);
+  commitOrder();
+}
+function moveTo(fromKey, toKey){
+  if (fromKey === toKey) return;
+  const i = selected.indexOf(fromKey), j = selected.indexOf(toKey);
+  if (i < 0 || j < 0) return;
+  selected.splice(j, 0, selected.splice(i, 1)[0]);
+  commitOrder();
+}
+/* 只重排、不重新抓圖，避免拖曳時畫面閃爍 */
+function commitOrder(){
+  store.set("flood.selected.v2b", selected);
+  const nodes = new Map([...grid.children].map(el => [el.dataset.k, el]));
+  selected.forEach((k, n) => {
+    const el = nodes.get(k);
+    if (!el) return;
+    grid.appendChild(el);
+    const idx = el.querySelector(".idx");
+    if (idx) idx.textContent = pad(n + 1);
+  });
+}
+
+let dragKey = null;
+grid.addEventListener("dragstart", e => {
+  const p = e.target.closest(".panel");
+  if (!p) return;
+  dragKey = p.dataset.k;
+  p.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+  try { e.dataTransfer.setData("text/plain", dragKey); } catch(err){}
+});
+grid.addEventListener("dragend", e => {
+  const p = e.target.closest(".panel");
+  if (p) p.classList.remove("dragging");
+  [...grid.children].forEach(el => el.classList.remove("over"));
+  dragKey = null;
+});
+grid.addEventListener("dragover", e => {
+  const p = e.target.closest(".panel");
+  if (!p || !dragKey) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  [...grid.children].forEach(el => el.classList.toggle("over", el === p && el.dataset.k !== dragKey));
+});
+grid.addEventListener("drop", e => {
+  const p = e.target.closest(".panel");
+  if (!p || !dragKey) return;
+  e.preventDefault();
+  moveTo(dragKey, p.dataset.k);
+  [...grid.children].forEach(el => el.classList.remove("over"));
+});
+
 function refreshAll(){ elapsed = 0; cards.forEach(c => c.load()); }
-function commit(){ store.set("flood.selected", selected); renderOpts(); renderGrid(); refreshAll(); }
+function commit(){ store.set("flood.selected.v2b", selected); renderOpts(); renderGrid(); refreshAll(); }
 
 /* ====== 排程 ====== */
 let paused = false, elapsed = 0;
