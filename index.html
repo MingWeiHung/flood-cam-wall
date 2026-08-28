@@ -202,8 +202,8 @@
         <div id="opts"></div>
         <div class="import">
           <label>
-            新增站點：一行名稱、一行網址，可連續貼多組。<br>
-            也可以只貼網址，名稱會自動用編號代替。
+            <b style="color:var(--ink)">憑證過期時</b>：把新複製的網址貼進來，同一支攝影機會直接換掉網址，名稱和位置都保留。<br>
+            <b style="color:var(--ink)">新增站點</b>：一行名稱、一行網址，可連續貼多組。
           </label>
           <textarea id="import-box" placeholder="鳳仁路與澄觀路口&#10;https://floodinfo.kcg.gov.tw/public/SensorImage/xxxx.jpg"></textarea>
           <div class="row">
@@ -246,17 +246,17 @@
 <script>
 /* ====== 內建站點目錄 ====== */
 const BUILTIN = [
-  { name:"八德東路橋（八涳橋）", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/1511?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc0NTcwMTUsIm5iZiI6MTc4NzQ1NzAxNSwianRpIjoiZWVkNjFjMjEtN2I4ZC00N2IwLWI2Y2YtYmYyZmQxMWQ0NDQ2IiwiZXhwIjoxNzg3NjI5ODE1LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.aKLiAydqfHN_v0P55VgQtv7oiy-B-kPns4mO2xLY8MM&guid=38b234f9-6d7b-4fe0-8134-bcc2489a7ac1" },
+  { name:"八德東路橋（八涳橋）", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/1511?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc4OTUxODgsIm5iZiI6MTc4Nzg5NTE4OCwianRpIjoiYTI1NjExNTktMTE0ZC00NzA0LThmNWItZWE5MzJhMDEzYjljIiwiZXhwIjoxNzg4MDY3OTg4LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.pi4xmVJDrjKnyMX6ni6nyB32861TcbfuGw6ZA4_BBTA&guid=272c7b07-55fc-4f92-b762-bb6b55f5bcda" },
   { name:"八德東路388巷與名湖街口", url:"https://floodinfo.kcg.gov.tw/public/SensorImage/3972500FL0006.jpg?guid=31ef2b11-c495-4ce9-ad62-269840561a7d" },
-  { name:"北屋北街與京文路口", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/1512?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc0NTg4MTIsIm5iZiI6MTc4NzQ1ODgxMiwianRpIjoiZGUyNDRlNDUtODkwZS00OWNmLTgyYTctOTk2N2M2MmEzMjQ3IiwiZXhwIjoxNzg3NjMxNjEyLCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.a4QL85FlEqs7f5YFcuOXwdjpVEcbQCKunwpEAD7lFCQ&guid=7c2c534a-6ae1-44d0-ab8e-c4f9fa004b5e" },
+  { name:"北屋北街與京文路口", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/1512?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc4OTU3ODksIm5iZiI6MTc4Nzg5NTc4OSwianRpIjoiYjI3N2RjYjgtY2I4NC00NDVmLWFlOTQtMzMyODllZWNhMTVmIiwiZXhwIjoxNzg4MDY4NTg5LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.1_DcOuN6abjSnfZvQFnbN3d4spP-tOQ_-ZoKKZq4VzQ&guid=777d68df-0a45-4f11-81c8-40c9a654c6d6" },
   { name:"仁光路與仁雄路口（NET）", url:"https://floodinfo.kcg.gov.tw/public/SensorImage/3972500FL0008.jpg?guid=64bfdc17-dbf7-4fb1-a0cc-1d185cece941" },
   { name:"澄觀路與仁怡街口", url:"https://floodinfo.kcg.gov.tw/public/SensorImage/TSIOT029.jpg?guid=8dc281e3-eda5-46e2-80f8-0f2bf969ac3d" },
-  { name:"仁雄橋", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/360?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc0OTYwMzgsIm5iZiI6MTc4NzQ5NjAzOCwianRpIjoiNjYxYTZmNDMtOWEzZC00N2RmLWFkNTYtYjIxY2VlMGRkYWM1IiwiZXhwIjoxNzg3NjY4ODM4LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.KyR4CnjPUmk9qhkgE2F_hh-xWfChZs1ZfAaRUpLi8Cg&guid=1f95f6cb-41da-43ba-8f92-d0b4e88ae6f6" },
+  { name:"澄觀橋", url:"https://floodinfo.kcg.gov.tw//service/api/cctv/wrs/image/351?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODc4OTUxODgsIm5iZiI6MTc4Nzg5NTE4OCwianRpIjoiYTI1NjExNTktMTE0ZC00NzA0LThmNWItZWE5MzJhMDEzYjljIiwiZXhwIjoxNzg4MDY3OTg4LCJpZGVudGl0eSI6ImthbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.pi4xmVJDrjKnyMX6ni6nyB32861TcbfuGw6ZA4_BBTA&guid=ea225835-60f5-43c4-bc3b-33c31941dbf4" },
   { name:"鳳仁路與澄觀路口", url:"https://floodinfo.kcg.gov.tw/public/SensorImage/3972500FL0007.jpg?guid=567bb3da-5052-477a-9b9d-7eb988321247" },
   { name:"八德東路23巷路口", url:"https://iapi.wra.gov.tw/v3/api/Image/4777c38d-a1c2-43a7-bc51-601d89fad4d5?guid=00639204-8d71-4b31-81ad-409151da3692" },
 
   /* --- 以下為免憑證版本（twipcam 轉送，不會過期） --- */
-  { name:"仁雄橋（免憑證）", url:"https://c01.twipcam.com/cam/snapshot/wra-002896.jpg" },
+  { name:"仁雄橋", url:"https://c01.twipcam.com/cam/snapshot/wra-002896.jpg" },
   { name:"鳳仁路與澄觀路口（免憑證）", url:"https://c01.twipcam.com/cam/snapshot/khh-000272.jpg" },
   { name:"澄觀路、水管路三段東側", url:"https://c01.twipcam.com/cam/snapshot/khh-700013.jpg" },
   { name:"澄觀路、水管路三段西側", url:"https://c01.twipcam.com/cam/snapshot/khh-700014.jpg" },
@@ -301,10 +301,16 @@ const store = {
   set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
 let custom = store.get("flood.custom", []);
+let overrides = store.get("flood.overrides", {});
 let selected = store.get("flood.selected.v2b", null);
 
-function catalog(){ return BUILTIN.concat(custom); }
-if (!Array.isArray(selected)) selected = catalog().filter(s => kindOf(s.url) !== "CCTV").map(s => keyOf(s.url));
+function catalog(){
+  return BUILTIN.concat(custom).map(s => {
+    const k = keyOf(s.url);
+    return overrides[k] ? { ...s, url: overrides[k] } : s;
+  });
+}
+if (!Array.isArray(selected)) selected = catalog().map(s => keyOf(s.url));
 function isOn(s){ return selected.includes(keyOf(s.url)); }
 
 /* ====== 站點選單 ====== */
@@ -358,27 +364,37 @@ document.querySelectorAll(".picker-acts .ctl").forEach(b => {
 $("import-btn").addEventListener("click", () => {
   const lines = $("import-box").value.split("\n").map(l => l.trim()).filter(Boolean);
   const added = [];
-  let pending = null;
+  let updated = 0, pending = null;
   lines.forEach(l => {
     if (/^https?:\/\//i.test(l)) {
-      const name = pending || ("站點 " + (catalog().length + added.length + 1));
-      if (!catalog().some(s => keyOf(s.url) === keyOf(l)) && !added.some(s => keyOf(s.url) === keyOf(l))) {
-        added.push({ name, url: l });
+      const k = keyOf(l);
+      const exists = catalog().some(s => keyOf(s.url) === k) || added.some(s => keyOf(s.url) === k);
+      if (exists) {
+        overrides[k] = l;           // 同一支攝影機 → 換掉網址，名稱與位置不動
+        updated++;
+      } else {
+        added.push({ name: pending || ("站點 " + (catalog().length + added.length + 1)), url: l });
       }
       pending = null;
     } else pending = l;
   });
-  if (added.length) {
-    custom = custom.concat(added);
-    selected = selected.concat(added.map(s => keyOf(s.url)));
-    store.set("flood.custom", custom);
+  if (added.length || updated) {
+    if (added.length) {
+      custom = custom.concat(added);
+      selected = selected.concat(added.map(s => keyOf(s.url)));
+      store.set("flood.custom", custom);
+    }
+    if (updated) store.set("flood.overrides", overrides);
     $("import-box").value = "";
-    $("import-msg").textContent = "已加入 " + added.length + " 個站點";
+    $("import-msg").textContent =
+      (updated ? "已更新 " + updated + " 支憑證" : "") +
+      (updated && added.length ? "、" : "") +
+      (added.length ? "新增 " + added.length + " 個站點" : "");
     commit();
   } else {
-    $("import-msg").textContent = "沒有可加入的網址（重複或格式不符）";
+    $("import-msg").textContent = "沒有可處理的網址";
   }
-  setTimeout(() => { $("import-msg").textContent = ""; }, 4000);
+  setTimeout(() => { $("import-msg").textContent = ""; }, 5000);
 });
 
 /* ====== 影像牆 ====== */
